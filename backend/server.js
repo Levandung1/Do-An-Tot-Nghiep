@@ -14,7 +14,7 @@ import commentRoutes from './routes/commentRoutes.js';      // ✅ thêm
 import watchRoutes from './routes/watchRoutes.js';          // ✅ thêm
 import categoryRoutes from './routes/categoryRoutes.js';    // ✅ thêm
 import uploadRoutes from './routes/uploadRoutes.js';
-
+import chatbotRoutes from './routes/chatbotRoutes.js';    // ✅ thêm
 dotenv.config();
 connectDB();
 
@@ -32,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/comments', commentRoutes);    // ✅ thêm
 app.use('/api/watch', watchRoutes);         // ✅ thêm
 app.use('/api/categories', categoryRoutes); // ✅ thêm

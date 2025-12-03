@@ -1,9 +1,9 @@
-// src/admin/pages/ManageComments.jsx
-import React, { useState } from 'react';
-import styled from 'styled-components';
-
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import axios from "axios";
+const API_URL = "http://localhost:5000/api/comments";
 const Container = styled.div`
-  color: black; /* ✅ đảm bảo chữ trong nội dung là màu đen */
+  color: black;
 `;
 
 const Title = styled.h2`
@@ -15,20 +15,20 @@ const Table = styled.table`
   background: white;
   border-radius: 8px;
   border-collapse: collapse;
-  color: black; /* ✅ chữ trong bảng là màu đen */
+  color: black;
 `;
 
 const Th = styled.th`
   background: #f2f2f2;
   padding: 10px;
   text-align: left;
-  color: black; /* ✅ header chữ đen */
+  color: black;
 `;
 
 const Td = styled.td`
   padding: 10px;
   border-bottom: 1px solid #ddd;
-  color: black; /* ✅ nội dung bảng chữ đen */
+  color: black;
 `;
 
 const ActionButton = styled.button`
@@ -41,40 +41,67 @@ const ActionButton = styled.button`
 `;
 
 const ManageComments = () => {
-  const [comments, setComments] = useState([
-    { id: 1, content: 'Phim này hay quá!', user: 'jdoe', movie: 'Batman Begins', date: '2025-01-02' },
-    { id: 2, content: 'Tuyệt vời luôn', user: 'admin', movie: 'Inception', date: '2025-02-01' },
-  ]);
+  const [comments, setComments] = useState([]);
 
-  const handleDelete = (id) => {
-    const confirm = window.confirm('Xoá bình luận này?');
-    if (confirm) {
-      setComments(prev => prev.filter(c => c.id !== id));
+  const fetchComments = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setComments(res.data);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách bình luận:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const handleDelete = async (id) => {
+    const ok = window.confirm("Bạn có chắc muốn xoá bình luận này?");
+    if (!ok) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      fetchComments();
+    } catch (err) {
+      console.error("Lỗi khi xoá bình luận:", err);
     }
   };
 
   return (
     <Container>
       <Title>💬 Quản lý bình luận</Title>
+
       <Table>
         <thead>
           <tr>
             <Th>Nội dung</Th>
             <Th>Người dùng</Th>
             <Th>Phim</Th>
-            <Th>Ngày</Th>
+            <Th>Ngày tạo</Th>
             <Th>Hành động</Th>
           </tr>
         </thead>
+
         <tbody>
-          {comments.map(comment => (
-            <tr key={comment.id}>
-              <Td>{comment.content}</Td>
-              <Td>{comment.user}</Td>
-              <Td>{comment.movie}</Td>
-              <Td>{comment.date}</Td>
+          {comments.map((c) => (
+            <tr key={c._id}>
+              <Td>{c.content}</Td>
+              <Td>{c.userId?.username}</Td>
+              <Td>{c.movieId?.title}</Td>
+              <Td>{new Date(c.createdAt).toLocaleString("vi-VN")}</Td>
               <Td>
-                <ActionButton onClick={() => handleDelete(comment.id)}>Xoá</ActionButton>
+                <ActionButton onClick={() => handleDelete(c._id)}>Xoá</ActionButton>
               </Td>
             </tr>
           ))}

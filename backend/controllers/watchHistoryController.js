@@ -3,13 +3,17 @@ import WatchHistory from '../models/WatchHistory.js';
 // Lấy tất cả lịch sử xem
 export const getAllWatchHistory = async (req, res) => {
   try {
-    const history = await WatchHistory.find();
+    const history = await WatchHistory.find()
+      .populate("user", "username email avatar")
+      .populate("movie", "title posterUrl thumbnail")
+      .sort({ date: -1 });
+
     res.json(history);
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 // Thêm lịch sử xem
 export const addWatchHistory = async (req, res) => {
   const { user, movie } = req.body;
@@ -28,9 +32,9 @@ export const updateWatchHistory = async (req, res) => {
     const { userId, movieId, lastWatchedTime } = req.body;
 
     // Tìm lịch sử xem hiện có
-    const existingHistory = await WatchHistory.findOne({ 
-      user: userId, 
-      movie: movieId 
+    const existingHistory = await WatchHistory.findOne({
+      user: userId,
+      movie: movieId
     });
 
     if (existingHistory) {
@@ -55,11 +59,21 @@ export const updateWatchHistory = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi cập nhật lịch sử xem' });
   }
 };
+export const deleteWatchHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    await WatchHistory.findByIdAndDelete(id);
+
+    res.json({ message: "Xoá lịch sử xem thành công" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 export const getUserWatchHistory = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     const watchHistory = await WatchHistory.find({ user: userId })
       .populate('movie')
       .sort({ date: -1 });

@@ -28,7 +28,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/watch-history" element={<WatchHistory />} />
         <Route path="/register" element={<Register />} />
-
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route
           path="/admin"

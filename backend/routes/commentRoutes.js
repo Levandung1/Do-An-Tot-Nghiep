@@ -4,15 +4,16 @@ import {
   deleteComment, 
   updateComment,
   likeComment,
-  createComment
+  createComment,
+  getAllComments,
 } from '../controllers/commentController.js';
-import { verifyToken } from '../middleware/auth.js';
+import { verifyAdmin, verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Public routes
 router.get('/movie/:movieId', getCommentsByMovie);
-
+router.get('/', verifyToken, verifyAdmin, getAllComments);
 // Protected routes (require authentication)
 router.post('/', verifyToken, createComment);
 router.delete('/:commentId', verifyToken, deleteComment);

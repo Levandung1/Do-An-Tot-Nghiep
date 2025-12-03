@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const LoginWrapper = styled.div`
   height: 100vh;
@@ -37,6 +38,7 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: 10px;
+  border: 1px solid #ddd;
 `;
 
 const Button = styled.button`
@@ -48,6 +50,7 @@ const Button = styled.button`
   font-size: 1rem;
   border-radius: 4px;
   cursor: pointer;
+  opacity: ${props => (props.disabled ? 0.7 : 1)};
 `;
 
 const Error = styled.div`
@@ -60,33 +63,66 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleLogin = () => {
-    if (form.username === 'admin' && form.password === '123456') {
-      localStorage.setItem('isAdmin', 'true');
-      navigate('/admin/manage-movies');
-    } else {
-      setError('Sai tài khoản hoặc mật khẩu!');
+  const handleLogin = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/admin/login", {
+        username: form.username,
+        password: form.password
+      });
+
+      // Lưu token
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("isAdmin", "true");
+
+      navigate('/admin/manage-movies'); // Chuyển sang trang admin
+
+    } catch (err) {
+      console.error("Login error:", err.response?.data);
+      setError(err.response?.data?.message || "Sai tài khoản hoặc mật khẩu!");
     }
+
+    setLoading(false);
   };
 
   return (
     <LoginWrapper>
       <LoginBox>
         <Title>Đăng nhập Admin</Title>
+
         <FormGroup>
           <Label>Tên đăng nhập</Label>
-          <Input name="username" value={form.username} onChange={handleChange} />
+          <Input
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            placeholder="Nhập username..."
+          />
         </FormGroup>
+
         <FormGroup>
           <Label>Mật khẩu</Label>
-          <Input name="password" type="password" value={form.password} onChange={handleChange} />
+          <Input
+            name="password"
+            type="password"
+            value={form.password}
+            onChange={handleChange}
+            placeholder="Nhập mật khẩu..."
+          />
         </FormGroup>
-        <Button onClick={handleLogin}>Đăng nhập</Button>
+
+        <Button disabled={loading} onClick={handleLogin}>
+          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
+        </Button>
+
         {error && <Error>{error}</Error>}
       </LoginBox>
     </LoginWrapper>

@@ -1,16 +1,20 @@
+import Admin from '../models/Admin.js';
 import Comment from '../models/Comment.js';
 import Movie from '../models/Movie.js';
 
 // Lấy tất cả bình luận
 export const getAllComments = async (req, res) => {
   try {
-    const comments = await Comment.find();
+    const comments = await Comment.find()
+      .populate("userId", "username")
+      .populate("movieId", "title")
+      .sort({ createdAt: -1 });
+
     res.json(comments);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
 // Lấy tất cả bình luận của một phim
 export const getCommentsByMovie = async (req, res) => {
   try {
@@ -23,34 +27,34 @@ export const getCommentsByMovie = async (req, res) => {
     res.status(500).json({ message: 'Error getting comments' });
   }
 };
-
-
-
 // Xóa bình luận
 export const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const userId = req.user._id; // Lấy từ middleware verifyToken
 
     const comment = await Comment.findById(commentId);
-    
+
     if (!comment) {
-      return res.status(404).json({ message: 'Comment not found' });
+      return res.status(404).json({ message: "Comment not found" });
     }
 
-    // Kiểm tra quyền xóa (chỉ user tạo comment hoặc admin mới được xóa)
-    if (comment.user.toString() !== userId.toString() && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Not authorized to delete this comment' });
+    // Nếu là admin → Xóa thẳng
+    if (req.user.role === "admin") {
+      await Comment.findByIdAndDelete(commentId);
+      return res.json({ message: "Comment deleted successfully" });
     }
-
+    // User chỉ được xoá comment của mình
+    if (comment.userId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not authorized to delete this comment" });
+    }
     await Comment.findByIdAndDelete(commentId);
-    res.status(200).json({ message: 'Comment deleted successfully' });
+    res.json({ message: "Comment deleted successfully" });
+
   } catch (error) {
-    console.error('Error deleting comment:', error);
-    res.status(500).json({ message: 'Error deleting comment' });
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ message: "Error deleting comment" });
   }
 };
-
 // Cập nhật bình luận
 export const updateComment = async (req, res) => {
   try {
@@ -59,7 +63,7 @@ export const updateComment = async (req, res) => {
     const userId = req.user._id;
 
     const comment = await Comment.findById(commentId);
-    
+
     if (!comment) {
       return res.status(404).json({ message: 'Comment not found' });
     }
@@ -71,7 +75,7 @@ export const updateComment = async (req, res) => {
 
     const updatedComment = await Comment.findByIdAndUpdate(
       commentId,
-      { 
+      {
         content,
         isEdited: true
       },
@@ -111,7 +115,7 @@ export const likeComment = async (req, res) => {
 export const createComment = async (req, res) => {
   try {
     const { movieId, content } = req.body;
-    
+
     // Lấy thông tin user từ middleware auth
     const userId = req.user._id;
     const userName = req.user.username;

@@ -1,10 +1,11 @@
 import express from 'express';
-import { getAllWatchHistory, addWatchHistory, updateWatchHistory, getUserWatchHistory } from '../controllers/watchHistoryController.js';
-import { verifyToken } from '../middleware/auth.js';
+import { getAllWatchHistory, addWatchHistory, updateWatchHistory, getUserWatchHistory, deleteWatchHistory } from '../controllers/watchHistoryController.js';
+import { verifyAdmin, verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/', getAllWatchHistory);
+router.get('/', verifyToken, verifyAdmin, getAllWatchHistory);
+router.delete('/:id', verifyToken, verifyAdmin, deleteWatchHistory);
 router.post('/', addWatchHistory);
 
 // Cập nhật lịch sử xem

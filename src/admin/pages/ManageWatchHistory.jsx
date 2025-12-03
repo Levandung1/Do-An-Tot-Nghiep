@@ -1,9 +1,11 @@
-// src/admin/pages/ManageWatchHistory.jsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
+
+const API_URL = "http://localhost:5000/api/watch";
 
 const Container = styled.div`
-  color: black; /* ✅ đảm bảo chữ mặc định là đen */
+  color: black;
 `;
 
 const Title = styled.h2`
@@ -15,20 +17,18 @@ const Table = styled.table`
   background: white;
   border-radius: 8px;
   border-collapse: collapse;
-  color: black; /* ✅ chữ trong bảng là đen */
+  color: black;
 `;
 
 const Th = styled.th`
   background: #f2f2f2;
   padding: 10px;
   text-align: left;
-  color: black; /* ✅ header chữ đen */
 `;
 
 const Td = styled.td`
   padding: 10px;
   border-bottom: 1px solid #ddd;
-  color: black; /* ✅ ô dữ liệu chữ đen */
 `;
 
 const ActionButton = styled.button`
@@ -41,38 +41,70 @@ const ActionButton = styled.button`
 `;
 
 const ManageWatchHistory = () => {
-  const [history, setHistory] = useState([
-    { id: 1, user: 'jdoe', movie: 'Batman Begins', date: '2025-01-01' },
-    { id: 2, user: 'admin', movie: 'Inception', date: '2025-01-15' },
-  ]);
+  const [history, setHistory] = useState([]);
 
-  const handleDelete = (id) => {
-    const confirm = window.confirm('Xoá lịch sử này?');
-    if (confirm) {
-      setHistory(prev => prev.filter(h => h.id !== id));
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(API_URL, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setHistory(res.data);
+
+    } catch (err) {
+      console.error("Lỗi khi lấy lịch sử xem:", err);
     }
   };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xoá lịch sử này?")) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(`${API_URL}/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      fetchHistory();
+
+    } catch (err) {
+      console.error("Lỗi khi xoá lịch sử:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   return (
     <Container>
       <Title>🕒 Quản lý lịch sử xem</Title>
+
       <Table>
         <thead>
           <tr>
             <Th>Người dùng</Th>
             <Th>Phim</Th>
+            <Th>Thời gian xem</Th>
             <Th>Ngày xem</Th>
             <Th>Hành động</Th>
           </tr>
         </thead>
+
         <tbody>
           {history.map(item => (
-            <tr key={item.id}>
-              <Td>{item.user}</Td>
-              <Td>{item.movie}</Td>
-              <Td>{item.date}</Td>
+            <tr key={item._id}>
+              <Td>{item.user?.username || "Unknown"}</Td>
+              <Td>{item.movie?.title || "Unknown"}</Td>
+              <Td>{item.lastWatchedTime}s</Td>
+              <Td>{new Date(item.date).toLocaleString("vi-VN")}</Td>
               <Td>
-                <ActionButton onClick={() => handleDelete(item.id)}>Xoá</ActionButton>
+                <ActionButton onClick={() => handleDelete(item._id)}>
+                  Xoá
+                </ActionButton>
               </Td>
             </tr>
           ))}

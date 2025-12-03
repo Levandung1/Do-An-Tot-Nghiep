@@ -1,22 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import Admin from '../models/Admin.js';
 import User from '../models/User.js';
-
-// Đăng nhập ADMIN
-export const adminLogin = async (req, res) => {
-  const { username, password } = req.body;
-  const admin = await Admin.findOne({ username });
-  if (!admin) return res.status(401).json({ message: 'Admin không tồn tại' });
-
-  const isMatch = await bcrypt.compare(password, admin.password);
-  if (!isMatch) return res.status(401).json({ message: 'Sai mật khẩu Admin' });
-
-  const token = jwt.sign({ id: admin._id, username: admin.username, role: 'admin' }, process.env.JWT_SECRET);
-
-  res.json({ token, admin: { id: admin._id, username: admin.username } });
-};
-
 // Đăng ký USER
 export const registerUser = async (req, res) => {
   const { username, email, password } = req.body;
