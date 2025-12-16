@@ -1,483 +1,266 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import axios from 'axios';
-import styled from 'styled-components';
-import Navbar from '../components/Navbar/Navbar';
-import Footer from '../components/Footer/Footer';
-import { FaPlay, FaStar, FaHeart } from 'react-icons/fa';
-
-const Container = styled.div`
-  min-height: 100vh;
-  background: #141414;
-`;
-
-const MovieHero = styled.div`
-  position: relative;
-  height: 70vh;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.8) 100%
-  ),
-  url(\${props => props.backdrop}) no-repeat center center/cover;
-`;
-
-const MovieContent = styled.div`
-  position: absolute;
-  bottom: 50px;
-  left: 50px;
-  right: 50px;
-  display: flex;
-  gap: 30px;
-  align-items: flex-end;
-`;
-
-const PosterContainer = styled.div`
-  flex-shrink: 0;
-`;
-
-const Poster = styled.img`
-  width: 300px;
-  height: 450px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-  border: 3px solid rgba(255, 255, 255, 0.2);
-`;
-
-const InfoContainer = styled.div`
-  flex-grow: 1;
-  color: white;
-`;
-
-const Title = styled.h1`
-  font-size: 3rem;
-  margin-bottom: 15px;
-`;
-
-const Metadata = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-  font-size: 1.1rem;
-  color: #ccc;
-`;
-
-const Rating = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: #ffd700;
-`;
-
-const Description = styled.p`
-  font-size: 1.2rem;
-  line-height: 1.6;
-  margin-bottom: 30px;
-  max-width: 800px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 15px;
-`;
-
-const Button = styled.button`
-  padding: 12px 30px;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-
-  &:first-child {
-    background-color: #e50914;
-    color: white;
-
-    &:hover {
-      background-color: #b2070e;
-    }
-  }
-
-  &:last-child {
-    background-color: rgba(109, 109, 110, 0.7);
-    color: white;
-
-    &:hover {
-      background-color: rgba(109, 109, 110, 0.4);
-    }
-  }
-`;
-
-const MovieDetails = styled.div`
-  padding: 50px;
-  color: white;
-`;
-
-const Section = styled.div`
-  margin-bottom: 40px;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  color: #e5e5e5;
-`;
-
-const CommentSection = styled.div`
-  margin-top: 40px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
-`;
-
-const CommentTitle = styled.h3`
-  color: white;
-  margin-bottom: 20px;
-`;
-
-const CommentForm = styled.form`
-  margin-bottom: 20px;
-`;
-
-const CommentInput = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-
-const UserNameInput = styled.input`
-  width: 200px;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.9);
-`;
-
-const CommentTextInput = styled.input`
-  flex: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.9);
-`;
-
-const CommentList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-`;
-
-const CommentItem = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 4px;
-`;
-
-const CommentHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-`;
-
-const UserName = styled.span`
-  color: #e50914;
-  font-weight: bold;
-`;
-
-const CommentDate = styled.span`
-  color: #999;
-  font-size: 0.9em;
-`;
-
-const CommentContent = styled.p`
-  color: white;
-  margin: 0;
-`;
-
-const UserInfo = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px 16px;
-  border-radius: 4px;
-  color: #e50914;
-  font-weight: bold;
-  width: 200px;
-`;
-
-const VideoModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const VideoContainer = styled.div`
-  width: 80%;
-  max-width: 1200px;
-  position: relative;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: -40px;
-  right: 0;
-  background: none;
-  border: none;
-  color: white;
-  font-size: 24px;
-  cursor: pointer;
-  padding: 5px 10px;
-  
-  &:hover {
-    color: #e50914;
-  }
-`;
-
-const VideoPlayer = styled.video`
-  width: 100%;
-  height: auto;
-  max-height: 80vh;
-`;
+import React, { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import Navbar from "../components/Navbar/Navbar";
+import Footer from "../components/Footer/Footer";
+import { FaPlay, FaStar, FaHeart } from "react-icons/fa";
+import { X } from "lucide-react";
 
 const MovieDetail = () => {
   const { id } = useParams();
-  const location = useLocation();
+
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comments, setComments] = useState([]);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
-  const [lastWatchedTime, setLastWatchedTime] = useState(location.state?.lastWatchedTime || 0);
-  const [autoPlay, setAutoPlay] = useState(location.state?.autoPlay || false);
-  const [videoRef, setVideoRef] = useState(null);
-  const [isTimeSet, setIsTimeSet] = useState(false);
-  const [currentVideoTime, setCurrentVideoTime] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const videoRef = useRef(null);
+
+  /* ================= INIT ================= */
 
   useEffect(() => {
-    // Kiểm tra user và token từ localStorage
-    const loggedInUser = localStorage.getItem('user');
-    const authToken = localStorage.getItem('token');
-    if (loggedInUser && authToken) {
-      setUser(JSON.parse(loggedInUser));
-      setToken(authToken);
+    const u = localStorage.getItem("user");
+    const t = localStorage.getItem("token");
+    if (u && t) {
+      setUser(JSON.parse(u));
+      setToken(t);
     }
-    
+
     fetchMovie();
     fetchComments();
   }, [id]);
 
-  useEffect(() => {
-    if (location.state?.lastWatchedTime) {
-      setLastWatchedTime(location.state.lastWatchedTime);
-    }
-    if (location.state?.autoPlay) {
-      setAutoPlay(true);
-      setShowVideo(true);
-    }
-  }, [location.state]);
-
-  useEffect(() => {
-    if (videoRef && lastWatchedTime > 0 && !isTimeSet) {
-      videoRef.currentTime = lastWatchedTime;
-      setIsTimeSet(true);
-    }
-  }, [videoRef, lastWatchedTime, isTimeSet]);
+  /* ================= FETCH ================= */
 
   const fetchMovie = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/movies/${id}`);
-      setMovie(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching movie:', error);
+      const res = await axios.get(`http://localhost:5000/api/movies/${id}`);
+      setMovie(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/comments/movie/${id}`);
-      setComments(response.data);
-    } catch (error) {
-      console.error('Error fetching comments:', error);
+      const res = await axios.get(
+        `http://localhost:5000/api/comments/movie/${id}`
+      );
+      setComments(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
+
+  /* ================= COMMENT ================= */
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-
-    // Kiểm tra đăng nhập
-    if (!user || !token) {
-      alert('Vui lòng đăng nhập để bình luận');
-      return;
-    }
+    if (!user) return alert("Vui lòng đăng nhập");
 
     try {
-      const config = {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      };
-
-      const response = await axios.post('http://localhost:5000/api/comments', {
-        movieId: id,
-        content: commentText.trim()
-      }, config);
-      
-      // Thêm comment mới vào đầu danh sách
-      setComments([response.data, ...comments]);
-      // Reset form
-      setCommentText('');
-    } catch (error) {
-      console.error('Error posting comment:', error);
-      if (error.response?.status === 401) {
-        alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
-        // Có thể chuyển hướng về trang đăng nhập ở đây
-        // navigate('/login');
-      }
+      const res = await axios.post(
+        "http://localhost:5000/api/comments",
+        { movieId: id, content: commentText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setComments([res.data, ...comments]);
+      setCommentText("");
+    } catch (err) {
+      console.error(err);
     }
   };
 
-  const handleTimeUpdate = (e) => {
-    setCurrentVideoTime(e.target.currentTime);
-  };
+  /* ================= VIDEO ================= */
+
+  useEffect(() => {
+    document.body.style.overflow = showVideo ? "hidden" : "auto";
+  }, [showVideo]);
 
   const handleCloseVideo = async () => {
-    if (user && currentVideoTime > 0) {
+    if (user && currentTime > 0) {
       try {
-        await axios.post('http://localhost:5000/api/watch/history', {
-          userId: user._id,
-          movieId: id,
-          lastWatchedTime: currentVideoTime
-        }, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-      } catch (error) {
-        console.error('Error updating watch history:', error);
+        await axios.post(
+          "http://localhost:5000/api/watch/history",
+          {
+            userId: user._id,
+            movieId: id,
+            lastWatchedTime: currentTime,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (err) {
+        console.error(err);
       }
     }
     setShowVideo(false);
-    setIsTimeSet(false);
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  /* ================= STATES ================= */
 
-  if (!movie) {
-    return <div>Movie not found</div>;
-  }
+  if (loading)
+    return <div className="pt-20 text-center text-white">Loading...</div>;
+
+  if (!movie)
+    return <div className="pt-20 text-center text-white">Movie not found</div>;
+
+  /* ================= RENDER ================= */
 
   return (
-    <Container>
+    <div className="bg-[#0a0a0a] text-white min-h-screen pt-16">
       <Navbar />
-      <MovieHero backdrop={movie.backdropUrl}>
-        <MovieContent>
-          <PosterContainer>
-            <Poster src={movie.posterUrl} alt={movie.title} />
-          </PosterContainer>
-          <InfoContainer>
-            <Title>{movie.title}</Title>
-            <Metadata>
-              <span>{movie.year}</span>
-              <span>{movie.duration}</span>
-              <Rating>
-                <FaStar /> {movie.rating}
-              </Rating>
-            </Metadata>
-            <Description>{movie.description}</Description>
-            <ButtonGroup>
-              <Button onClick={() => setShowVideo(true)}>
-                <FaPlay /> Xem phim
-              </Button>
-              <Button>
-                <FaHeart /> Yêu thích
-              </Button>
-            </ButtonGroup>
-          </InfoContainer>
-        </MovieContent>
-      </MovieHero>
 
-      {showVideo && (
-        <VideoModal>
-          <VideoContainer>
-            <CloseButton onClick={handleCloseVideo}>×</CloseButton>
-            <VideoPlayer 
-              ref={setVideoRef}
-              src={movie.trailerUrl} 
-              controls 
-              autoPlay={autoPlay}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={() => setIsTimeSet(false)}
+      {/* ================= HERO ================= */}
+      <section className="relative min-h-[80vh] md:h-[80vh] w-full overflow-hidden">
+        <img
+          src={movie.backdropUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover scale-110"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/30 to-transparent" />
+
+        <div className="relative z-10 flex min-h-[80vh] items-end px-6 md:px-10 pb-16">
+          <div className="flex flex-col md:flex-row gap-8 items-end max-w-6xl">
+            {/* Poster */}
+            <img
+              src={movie.posterUrl}
+              alt={movie.title}
+              className="w-[220px] md:w-[260px] rounded-xl shadow-2xl"
             />
-          </VideoContainer>
-        </VideoModal>
+
+            {/* Info */}
+            <div>
+              <h1 className="text-3xl md:text-6xl font-black mb-4">
+                {movie.title}
+              </h1>
+
+              <div className="flex flex-wrap gap-4 text-gray-300 mb-4 text-sm">
+                <span>{movie.year}</span>
+                <span>{movie.duration}</span>
+                <span className="flex items-center gap-1 text-yellow-400">
+                  <FaStar /> {movie.rating}
+                </span>
+              </div>
+
+              <p className="text-gray-300 max-w-2xl mb-6 leading-relaxed">
+                {movie.description}
+              </p>
+
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={() => {
+                    if (!user || !token) {
+                      alert("⚠️ Vui lòng đăng nhập để xem phim");
+                      return;
+                    }
+                    setShowVideo(true);
+                  }}
+                  className="bg-white text-black px-8 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-200"
+                >
+                  <FaPlay /> Xem phim
+                </button>
+
+                <button className="bg-white/10 border border-white/10 px-6 py-3 rounded-xl font-bold hover:bg-white/20">
+                  <FaHeart /> Yêu thích
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= VIDEO MODAL ================= */}
+      {showVideo && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
+          <div className="relative w-[92%] max-w-6xl">
+            <button
+              onClick={handleCloseVideo}
+              className="absolute -top-12 right-0 text-white hover:text-red-500"
+            >
+              <X size={32} />
+            </button>
+
+            <video
+              ref={videoRef}
+              src={movie.trailerUrl}
+              controls
+              autoPlay
+              onTimeUpdate={(e) => setCurrentTime(e.target.currentTime)}
+              className="w-full rounded-xl max-h-[80vh]"
+            />
+          </div>
+        </div>
       )}
 
-      <MovieDetails>
-        <Section>
-          <SectionTitle>Thông tin phim</SectionTitle>
-          <p>Đạo diễn: {movie.director}</p>
-          <p>Diễn viên: {movie.actors?.join(', ')}</p>
-          <p>Thể loại: {movie.genre}</p>
-          <p>Quốc gia: {movie.country}</p>
-        </Section>
-      </MovieDetails>
-      <CommentSection>
-        <CommentTitle>Bình luận</CommentTitle>
-        <CommentForm onSubmit={handleCommentSubmit}>
-          <CommentInput>
-            {!user ? (
-              <UserNameInput
-                type="text"
-                placeholder="Vui lòng đăng nhập để bình luận"
-                disabled
-              />
-            ) : (
-              <UserInfo>{user.username}</UserInfo>
-            )}
-            <CommentTextInput
-              type="text"
-              placeholder={user ? "Viết bình luận của bạn..." : "Vui lòng đăng nhập để bình luận"}
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              disabled={!user}
-              required
-            />
-          </CommentInput>
-        </CommentForm>
+      {/* ================= INFO ================= */}
+      <section className="px-6 md:px-10 py-14 max-w-6xl mx-auto">
+        <h2 className="text-2xl font-bold mb-6">Thông tin phim</h2>
+        <div className="grid md:grid-cols-2 gap-4 text-gray-300">
+          <p>🎬 Đạo diễn: {movie.director}</p>
+          <p>🎭 Diễn viên: {movie.actors?.join(", ")}</p>
+          <p>📁 Thể loại: {movie.genre}</p>
+          <p>🌍 Quốc gia: {movie.country}</p>
+        </div>
+      </section>
 
-        <CommentList>
-          {comments.map((comment) => (
-            <CommentItem key={comment._id}>
-              <CommentHeader>
-                <UserName>{comment.userName}</UserName>
-                <CommentDate>
-                  {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
-                </CommentDate>
-              </CommentHeader>
-              <CommentContent>{comment.content}</CommentContent>
-            </CommentItem>
+      {/* ================= COMMENTS ================= */}
+      <section className="px-6 md:px-10 pb-20 max-w-6xl mx-auto">
+        <h2 className="text-xl font-bold mb-6">Bình luận</h2>
+
+        <form
+          onSubmit={handleCommentSubmit}
+          className="mb-6 flex flex-col sm:flex-row gap-4"
+        >
+          <input
+            type="text"
+            disabled={!user}
+            placeholder={
+              user ? "Viết bình luận..." : "Vui lòng đăng nhập để bình luận"
+            }
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="flex-1 bg-[#161616] border border-white/10 rounded-lg px-4 py-3 text-white"
+          />
+          <button
+            disabled={!user}
+            className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-bold disabled:opacity-40"
+          >
+            Gửi
+          </button>
+        </form>
+
+        <div className="space-y-4">
+          {comments.map((c) => (
+            <div
+              key={c._id}
+              className="bg-[#161616] border border-white/10 rounded-lg p-4"
+            >
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-purple-400 font-bold">
+                  {c.userName}
+                </span>
+                <span className="text-gray-500">
+                  {new Date(c.createdAt).toLocaleDateString("vi-VN")}
+                </span>
+              </div>
+              <p className="text-gray-300">{c.content}</p>
+            </div>
           ))}
-        </CommentList>
-      </CommentSection>
+        </div>
+      </section>
+
       <Footer />
-    </Container>
+    </div>
   );
 };
 
-export default MovieDetail; 
+export default MovieDetail;

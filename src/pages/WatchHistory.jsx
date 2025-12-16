@@ -1,200 +1,159 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
-import axios from 'axios';
-import Navbar from '../components/Navbar/Navbar';
-import Footer from '../components/Footer/Footer';
-import { FaPlay } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import Navbar from "../components/Navbar/Navbar";
+import Footer from "../components/Footer/Footer";
+import { Play } from "lucide-react";
 
-const Container = styled.div`
-  min-height: 100vh;
-  background: #141414;
-  padding-top: 60px;
-  padding-bottom: 40px;
-`;
-
-const Content = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-`;
-
-const Title = styled.h1`
-  color: white;
-  margin-bottom: 30px;
-`;
-
-const MovieGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-`;
-
-const MovieCard = styled.div`
-  position: relative;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-
-  &:hover {
-    transform: scale(1.05);
-  }
-`;
-
-const ContinueButton = styled.button`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(229, 9, 20, 0.9);
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  ${MovieCard}:hover & {
-    opacity: 1;
-  }
-
-  &:hover {
-    background: rgba(229, 9, 20, 1);
-  }
-`;
-
-const MoviePoster = styled.img`
-  width: 100%;
-  height: 300px;
-  object-fit: cover;
-  border-radius: 8px;
-`;
-
-const MovieInfo = styled.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 10px;
-  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-  border-radius: 0 0 8px 8px;
-  z-index: 1;
-`;
-
-const MovieTitle = styled.h3`
-  color: white;
-  margin: 0;
-  font-size: 16px;
-`;
-
-const WatchTime = styled.div`
-  color: #e50914;
-  font-size: 14px;
-  margin-top: 5px;
-`;
-
-const formatTime = (seconds) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else {
-    return `${minutes}m ${remainingSeconds}s`;
-  }
+const formatTime = (seconds = 0) => {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}m ${s}s`;
 };
 
 const WatchHistory = () => {
-  const [watchHistory, setWatchHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
-  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
+
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
-    const fetchWatchHistory = async () => {
+    const fetchHistory = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/watch/history/${user._id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
+        const res = await axios.get(
+          `http://localhost:5000/api/watch/history/${user._id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
           }
-        });
-        setWatchHistory(response.data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching watch history:', error);
+        );
+        setHistory(res.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchWatchHistory();
+    fetchHistory();
   }, [user, token, navigate]);
-
-  const handleMovieClick = (movieId, lastWatchedTime) => {
-    navigate(`/movie/${movieId}`, { state: { lastWatchedTime } });
-  };
-
-  const handleContinueWatching = (e, movieId, lastWatchedTime) => {
-    e.stopPropagation();
-    navigate(`/movie/${movieId}`, { 
-      state: { 
-        lastWatchedTime,
-        autoPlay: true 
-      } 
-    });
-  };
 
   if (loading) {
     return (
-      <Container>
+      <div className="bg-[#0a0a0a] min-h-screen text-white">
         <Navbar />
-        <Content>
-          <Title>Đang tải...</Title>
-        </Content>
-        <Footer />
-      </Container>
+        <div className="pt-32 text-center text-gray-400">Đang tải...</div>
+      </div>
     );
   }
 
   return (
-    <Container>
+    <div className="bg-[#0a0a0a] min-h-screen text-white">
       <Navbar />
-      <Content>
-        <Title>Danh sách phim đã xem</Title>
-        <MovieGrid>
-          {watchHistory.map((item) => (
-            <MovieCard 
-              key={item._id} 
-              onClick={() => handleMovieClick(item.movie._id, item.lastWatchedTime)}
-            >
-              <MoviePoster src={item.movie.posterUrl} alt={item.movie.title} />
-              <ContinueButton 
-                onClick={(e) => handleContinueWatching(e, item.movie._id, item.lastWatchedTime)}
-              >
-                <FaPlay /> Xem tiếp
-              </ContinueButton>
-              <MovieInfo>
-                <MovieTitle>{item.movie.title}</MovieTitle>
-                <WatchTime>Đã xem: {formatTime(item.lastWatchedTime)}</WatchTime>
-              </MovieInfo>
-            </MovieCard>
-          ))}
-        </MovieGrid>
-      </Content>
+
+      <section className="max-w-7xl mx-auto px-6 pt-28 pb-20">
+        <h1 className="text-3xl font-black mb-8">
+          🎬 Lịch sử xem phim
+        </h1>
+
+        {history.length === 0 ? (
+          <p className="text-gray-400">
+            Bạn chưa xem phim nào.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+            {history.map((item) => {
+              const movie = item.movie;
+              const percent =
+                movie.duration
+                  ? Math.min(
+                      (item.lastWatchedTime /
+                        (movie.duration * 60)) *
+                        100,
+                      100
+                    )
+                  : 0;
+
+              return (
+                <div
+                  key={item._id}
+                  onClick={() =>
+                    navigate(`/movie/${movie._id}`, {
+                      state: { lastWatchedTime: item.lastWatchedTime },
+                    })
+                  }
+                  className="group relative bg-[#1a1a1a] rounded-xl overflow-hidden cursor-pointer
+                             transition-all duration-300 hover:-translate-y-2
+                             hover:shadow-[0_10px_40px_-10px_rgba(229,9,20,0.6)]"
+                >
+                  {/* Poster */}
+                  <div className="aspect-[2/3] overflow-hidden">
+                    <img
+                      src={movie.posterUrl}
+                      alt={movie.title}
+                      className="w-full h-full object-cover transition-transform duration-700
+                                 group-hover:scale-110 group-hover:brightness-75"
+                    />
+                  </div>
+
+                  {/* Hover overlay */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100
+                               bg-gradient-to-t from-black via-black/50 to-transparent
+                               transition-opacity flex items-end p-4"
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/movie/${movie._id}`, {
+                          state: {
+                            lastWatchedTime: item.lastWatchedTime,
+                            autoPlay: true,
+                          },
+                        });
+                      }}
+                      className="w-full py-2 bg-red-600 hover:bg-red-700
+                                 rounded-lg text-xs font-bold flex items-center
+                                 justify-center gap-2"
+                    >
+                      <Play size={14} fill="currentColor" />
+                      Xem tiếp
+                    </button>
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-3">
+                    <h3 className="font-bold text-sm line-clamp-2 mb-1">
+                      {movie.title}
+                    </h3>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Đã xem {formatTime(item.lastWatchedTime)}
+                    </p>
+
+                    {/* Progress bar */}
+                    <div className="w-full h-1 bg-gray-700 rounded">
+                      <div
+                        className="h-1 bg-red-600 rounded"
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <Footer />
-    </Container>
+    </div>
   );
 };
 
-export default WatchHistory; 
+export default WatchHistory;

@@ -1,9 +1,9 @@
-// src/admin/pages/ManageCategories.jsx
-import React, { useState } from 'react';
-import styled from 'styled-components';
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import axios from "axios";
 
 const Container = styled.div`
-  color: black; /* ✅ đảm bảo chữ mặc định là đen */
+  color: black;
 `;
 
 const TitleBar = styled.div`
@@ -15,60 +15,42 @@ const TitleBar = styled.div`
 
 const Title = styled.h2``;
 
-const AddButton = styled.button`
-  background-color: #e50914;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-`;
-
 const Table = styled.table`
   width: 100%;
   background: white;
   border-radius: 8px;
   border-collapse: collapse;
-  color: black; /* ✅ chữ trong bảng là đen */
 `;
 
 const Th = styled.th`
   background: #f2f2f2;
   padding: 10px;
   text-align: left;
-  color: black; /* ✅ header chữ đen */
 `;
 
 const Td = styled.td`
   padding: 10px;
   border-bottom: 1px solid #ddd;
-  color: black; /* ✅ nội dung ô là đen */
-`;
-
-const ActionButton = styled.button`
-  margin-right: 10px;
-  padding: 6px 10px;
-  border: none;
-  border-radius: 4px;
-  background-color: ${props => props.edit ? '#007bff' : '#dc3545'};
-  color: white;
-  cursor: pointer;
 `;
 
 const ManageCategories = () => {
-  const [categories, setCategories] = useState([
-    { id: 1, name: 'Hành động', count: 12 },
-    { id: 2, name: 'Tình cảm', count: 5 },
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleEdit = (category) => {
-    alert(`Sửa thể loại: ${category.name}`);
-  };
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
-  const handleDelete = (id) => {
-    const confirm = window.confirm('Xoá thể loại này?');
-    if (confirm) {
-      setCategories(prev => prev.filter(c => c.id !== id));
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/categories/from-movies"
+      );
+      setCategories(res.data);
+    } catch (err) {
+      console.error("Fetch categories error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,32 +58,30 @@ const ManageCategories = () => {
     <Container>
       <TitleBar>
         <Title>🏷️ Quản lý thể loại</Title>
-        <AddButton>➕ Thêm thể loại</AddButton>
       </TitleBar>
 
-      <Table>
-        <thead>
-          <tr>
-            <Th>ID</Th>
-            <Th>Tên thể loại</Th>
-            <Th>Số lượng phim</Th>
-            <Th>Hành động</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map(c => (
-            <tr key={c.id}>
-              <Td>{c.id}</Td>
-              <Td>{c.name}</Td>
-              <Td>{c.count}</Td>
-              <Td>
-                <ActionButton edit onClick={() => handleEdit(c)}>Sửa</ActionButton>
-                <ActionButton onClick={() => handleDelete(c.id)}>Xoá</ActionButton>
-              </Td>
+      {loading ? (
+        <p>Đang tải...</p>
+      ) : (
+        <Table>
+          <thead>
+            <tr>
+              <Th>#</Th>
+              <Th>Tên thể loại</Th>
+              <Th>Số lượng phim</Th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {categories.map((c, i) => (
+              <tr key={i}>
+                <Td>{i + 1}</Td>
+                <Td>{c.name}</Td>
+                <Td>{c.count}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
     </Container>
   );
 };

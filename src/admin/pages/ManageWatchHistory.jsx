@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import styled from 'styled-components';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
+import axios from "axios";
 
 const API_URL = "http://localhost:5000/api/watch";
 
@@ -17,7 +17,6 @@ const Table = styled.table`
   background: white;
   border-radius: 8px;
   border-collapse: collapse;
-  color: black;
 `;
 
 const Th = styled.th`
@@ -33,26 +32,52 @@ const Td = styled.td`
 
 const ActionButton = styled.button`
   padding: 6px 10px;
-  border: none;
   border-radius: 4px;
-  background-color: #dc3545;
+  background: #dc3545;
   color: white;
+  border: none;
   cursor: pointer;
 `;
 
+const Pagination = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+`;
+
+const PageButton = styled.button`
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background: ${p => (p.active ? "#e50914" : "#fff")};
+  color: ${p => (p.active ? "#fff" : "#000")};
+  cursor: pointer;
+`;
+
+const formatWatchTime = (seconds = 0) => {
+  const total = Math.floor(seconds);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+
+  if (h > 0) return `${h} giờ ${m} phút ${s} giây`;
+  if (m > 0) return `${m} phút ${s} giây`;
+  return `${s} giây`;
+};
+
 const ManageWatchHistory = () => {
   const [history, setHistory] = useState([]);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-
       const res = await axios.get(API_URL, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       setHistory(res.data);
-
     } catch (err) {
       console.error("Lỗi khi lấy lịch sử xem:", err);
     }
@@ -63,13 +88,10 @@ const ManageWatchHistory = () => {
 
     try {
       const token = localStorage.getItem("token");
-
       await axios.delete(`${API_URL}/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
       fetchHistory();
-
     } catch (err) {
       console.error("Lỗi khi xoá lịch sử:", err);
     }
@@ -78,6 +100,12 @@ const ManageWatchHistory = () => {
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  const totalPages = Math.ceil(history.length / pageSize);
+  const paginatedHistory = history.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
   return (
     <Container>
@@ -93,13 +121,12 @@ const ManageWatchHistory = () => {
             <Th>Hành động</Th>
           </tr>
         </thead>
-
         <tbody>
-          {history.map(item => (
+          {paginatedHistory.map(item => (
             <tr key={item._id}>
               <Td>{item.user?.username || "Unknown"}</Td>
               <Td>{item.movie?.title || "Unknown"}</Td>
-              <Td>{item.lastWatchedTime}s</Td>
+              <Td>{formatWatchTime(item.lastWatchedTime)}</Td>
               <Td>{new Date(item.date).toLocaleString("vi-VN")}</Td>
               <Td>
                 <ActionButton onClick={() => handleDelete(item._id)}>
@@ -110,6 +137,20 @@ const ManageWatchHistory = () => {
           ))}
         </tbody>
       </Table>
+
+      {totalPages > 1 && (
+        <Pagination>
+          {[...Array(totalPages)].map((_, i) => (
+            <PageButton
+              key={i}
+              active={page === i + 1}
+              onClick={() => setPage(i + 1)}
+            >
+              {i + 1}
+            </PageButton>
+          ))}
+        </Pagination>
+      )}
     </Container>
   );
 };

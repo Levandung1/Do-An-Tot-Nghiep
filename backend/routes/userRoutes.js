@@ -1,5 +1,7 @@
 import express from 'express';
 import User from '../models/User.js';
+import { updateProfile } from '../controllers/userController.js';
+import { verifyToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -11,5 +13,5 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Lỗi server' });
   }
 });
-
+router.put("/profile", verifyToken, updateProfile);
 export default router;

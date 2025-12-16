@@ -24,6 +24,9 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  phone: { type: String },
+  birthday: { type: Date },
+  address: { type: String },
   avatar: {
     type: String,
     default: 'https://secure.gravatar.com/avatar/?s=90&d=identicon'
@@ -33,9 +36,9 @@ const userSchema = new mongoose.Schema({
 });
 
 // Mã hóa mật khẩu trước khi lưu
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
@@ -46,7 +49,7 @@ userSchema.pre('save', async function(next) {
 });
 
 // Phương thức kiểm tra mật khẩu
-userSchema.methods.matchPassword = async function(enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

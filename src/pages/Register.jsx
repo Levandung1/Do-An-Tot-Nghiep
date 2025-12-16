@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled from 'styled-components';
+import { toast } from "react-toastify";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -104,30 +105,36 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Kiểm tra mật khẩu xác nhận
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp');
       return;
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
-      });
+      const response = await axios.post(
+        'http://localhost:5000/api/auth/register',
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        }
+      );
 
-      // Lưu token và thông tin user
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
+      // 🔥 THÔNG BÁO THÀNH CÔNG
+      toast.success("🎉 Đăng ký thành công! Vui lòng đăng nhập");
 
-      // Chuyển hướng về trang chủ
-      navigate('/');
+      // 👉 KHÔNG lưu token ở đây (chuẩn hơn)
+      // 👉 Chuyển sang trang login sau 1 chút cho user thấy toast
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+
     } catch (error) {
-      setError(error.response?.data?.message || 'Đăng ký thất bại');
+      const msg = error.response?.data?.message || 'Đăng ký thất bại';
+      setError(msg);
+      toast.error(`❌ ${msg}`);
     }
   };
-
   return (
     <Container>
       <FormContainer>

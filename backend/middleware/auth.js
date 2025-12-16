@@ -38,6 +38,7 @@ export const verifyToken = async (req, res, next) => {
     return res.status(401).json({ message: "Token không hợp lệ" });
   }
 };
+// quyền admin
 export const verifyAdmin = (req, res, next) => {
   if (req.user.role === "admin") {
     return next();

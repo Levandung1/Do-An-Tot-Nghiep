@@ -1,58 +1,5 @@
 import React from "react";
-import styled from "styled-components";
-import { FaBell, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
-const Container = styled.div`
-  position: fixed;
-  top: 0;
-  width: 100%;
-  height: 60px;
-  background-color: black;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 40px;
-  z-index: 1000;
-`;
-
-const Logo = styled.h1`
-  color: red;
-  font-size: 26px;
-`;
-
-const Menu = styled.ul`
-  list-style: none;
-  display: flex;
-  gap: 25px;
-  color: white;
-  
-  li {
-    cursor: pointer;
-    transition: color 0.3s ease;
-    
-    &:hover {
-      color: #e50914;
-    }
-  }
-`;
-
-const AuthButtons = styled.div`
-  display: flex;
-  gap: 15px;
-  align-items: center;
-  color: white;
-`;
-
-const Button = styled.button`
-  background: red;
-  color: white;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-`;
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -65,29 +12,72 @@ const Navbar = () => {
   };
 
   return (
-    <Container>
-      <Logo>MY MOVIE</Logo>
-      <Menu>
-        <li onClick={() => navigate("/")}>Trang chủ</li>
-        <li onClick={() => navigate("/series")}>Series</li>
-        <li onClick={() => navigate("/movies")}>Phim</li>
-        <li onClick={() => navigate("/new")}>Mới & Phổ biến</li>
-        {user && <li onClick={() => navigate("/watch-history")}>Lịch sử xem phim</li>}
-      </Menu>
-      <AuthButtons>
-        {user ? (
-          <>
-            <span>👤 {user.username}</span>
-            <Button onClick={handleLogout}>Đăng xuất</Button>
-          </>
-        ) : (
-          <>
-            <Button onClick={() => navigate("/login")}>Đăng nhập</Button>
-            <Button onClick={() => navigate("/register")}>Đăng ký</Button>
-          </>
-        )}
-      </AuthButtons>
-    </Container>
+    <header className="fixed top-0 left-0 w-full z-50 bg-black/70 backdrop-blur-xl border-b border-white/10">
+      <div className="max-w-7xl mx-auto px-8 h-16 flex items-center justify-between">
+
+        {/* Logo */}
+        <div
+          onClick={() => navigate("/")}
+          className="text-2xl font-black text-red-600 cursor-pointer"
+        >
+          MY MOVIE
+        </div>
+
+        {/* Menu */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+          <span onClick={() => navigate("/")} className="cursor-pointer hover:text-white">
+            Trang chủ
+          </span>
+          <span onClick={() => navigate("/series")} className="cursor-pointer hover:text-white">
+            Series
+          </span>
+          <span onClick={() => navigate("/movies")} className="cursor-pointer hover:text-white">
+            Phim
+          </span>
+          <span onClick={() => navigate("/new")} className="cursor-pointer hover:text-white">
+            Mới & Phổ biến
+          </span>
+          <span onClick={() => navigate("/watch-history")} className="cursor-pointer hover:text-white">
+            Lịch sử xem phim
+          </span>
+        </nav>
+
+        {/* Auth */}
+        <div className="flex items-center gap-4">
+          {user ? (
+            <>
+              <span
+                onClick={() => navigate("/profile")}
+                className="text-gray-300 text-sm cursor-pointer hover:text-white"
+              >
+                👤 {user.username}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold"
+              >
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate("/login")}
+                className="text-gray-300 hover:text-white text-sm"
+              >
+                Đăng nhập
+              </button>
+              <button
+                onClick={() => navigate("/register")}
+                className="bg-red-600 hover:bg-red-700 px-4 py-1.5 rounded-lg text-sm font-bold"
+              >
+                Đăng ký
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
   );
 };
 

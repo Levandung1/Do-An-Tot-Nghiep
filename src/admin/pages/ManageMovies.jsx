@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:5000/api/movies';
 
@@ -240,33 +241,35 @@ const ManageMovies = () => {
       alert('Lỗi khi upload video!');
     }
   };
-
   const handleSubmit = async () => {
     try {
       if (editingMovie) {
         await axios.put(`${API_URL}/${editingMovie._id}`, formData);
+        toast.success("✅ Cập nhật phim thành công!");
       } else {
         await axios.post(API_URL, formData);
+        toast.success("🎬 Thêm phim mới thành công!");
       }
+
       await fetchMovies();
       closeModal();
     } catch (err) {
-      console.error('Lỗi khi lưu phim:', err);
+      console.error("Lỗi khi lưu phim:", err);
+      toast.error("❌ Lưu phim thất bại!");
     }
   };
-
   const handleDelete = async (id) => {
-    const confirm = window.confirm('Bạn có chắc muốn xoá phim này?');
-    if (confirm) {
-      try {
-        await axios.delete(`${API_URL}/${id}`);
-        fetchMovies();
-      } catch (err) {
-        console.error('Lỗi khi xoá phim:', err);
-      }
+    if (!window.confirm("Bạn có chắc muốn xoá phim này?")) return;
+
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      toast.success("🗑️ Xoá phim thành công!");
+      fetchMovies();
+    } catch (err) {
+      console.error("Lỗi khi xoá phim:", err);
+      toast.error("❌ Xoá phim thất bại!");
     }
   };
-
   return (
     <Container>
       <TitleBar>
@@ -321,11 +324,11 @@ const ManageMovies = () => {
             </FormGroup>
             <FormGroup>
               <Label>Năm</Label>
-              <Input 
-                name="year" 
-                value={formData.year} 
+              <Input
+                name="year"
+                value={formData.year}
                 onChange={handleInputChange}
-                type="number" 
+                type="number"
               />
             </FormGroup>
             <FormGroup>
@@ -346,18 +349,18 @@ const ManageMovies = () => {
             </FormGroup>
             <FormGroup>
               <Label>Thời lượng (phút)</Label>
-              <Input 
-                name="duration" 
-                value={formData.duration} 
+              <Input
+                name="duration"
+                value={formData.duration}
                 onChange={handleInputChange}
                 type="number"
               />
             </FormGroup>
             <FormGroup>
               <Label>Đánh giá</Label>
-              <Input 
-                name="rating" 
-                value={formData.rating} 
+              <Input
+                name="rating"
+                value={formData.rating}
                 onChange={handleInputChange}
                 type="number"
                 step="0.1"
@@ -375,16 +378,16 @@ const ManageMovies = () => {
             </FormGroup>
             <FormGroup>
               <Label>Trailer</Label>
-              <Input 
-                type="file" 
+              <Input
+                type="file"
                 accept="video/*"
                 onChange={handleFileChange}
               />
               {formData.trailerUrl && (
                 <div style={{ marginTop: '10px' }}>
-                  <video 
-                    src={formData.trailerUrl} 
-                    controls 
+                  <video
+                    src={formData.trailerUrl}
+                    controls
                     style={{ maxWidth: '100%', maxHeight: '200px' }}
                   />
                 </div>

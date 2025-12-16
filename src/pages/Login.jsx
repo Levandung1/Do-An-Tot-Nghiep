@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled from 'styled-components';
-
+import { toast } from "react-toastify";
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
@@ -88,28 +88,36 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
-        username,
-        password
-      });
+      const response = await axios.post(
+        'http://localhost:5000/api/auth/login',
+        { username, password }
+      );
 
-      // Lưu token vào localStorage
+      // Lưu token & user
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data));
 
-      // Chuyển hướng về trang chủ
-      navigate('/');
+      // 🔥 TOAST THÀNH CÔNG
+      toast.success("🎉 Đăng nhập thành công!");
+
+      // 👉 Chờ 1 chút cho user thấy toast rồi chuyển trang
+      setTimeout(() => {
+        navigate('/');
+      }, 1200);
+
     } catch (error) {
-      setError(error.response?.data?.message || 'Đăng nhập thất bại');
+      const msg = error.response?.data?.message || 'Đăng nhập thất bại';
+      setError(msg);
+
+      // 🔥 TOAST THẤT BẠI
+      toast.error(`❌ ${msg}`);
     }
   };
-
   return (
     <Container>
       <FormContainer>

@@ -6,7 +6,6 @@ import Register from './pages/Register';
 import Search from './pages/Search';
 import MovieDetail from './pages/MovieDetail';
 import GlobalStyles from './styles/GlobalStyles'; // ✅ Import thêm dòng này
-
 import AdminLayout from './admin/AdminLayout';
 import AdminDashboard from './admin/pages/AdminDashboard';
 import ManageMovies from './admin/pages/ManageMovies';
@@ -17,18 +16,38 @@ import ManageCategories from './admin/pages/ManageCategories';
 import AdminLogin from './admin/pages/AdminLogin';
 import RequireAdmin from './admin/RequireAdmin';
 import WatchHistory from './pages/WatchHistory';
+import Movies from './pages/Movies';
+import Series from './pages/Series';
+import NewPopular from './pages/NewPopular';
+import Profile from './pages/Profile';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function App() {
   return (
     <Router>
+      <ToastContainer
+        position="top-right"
+        autoClose={2500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        theme="dark"
+      />
       <GlobalStyles /> {/* ✅ Kích hoạt style toàn cục */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/search" element={<Search />} />
         <Route path="/movie/:id" element={<MovieDetail />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/movies" element={<Movies />} />
         <Route path="/watch-history" element={<WatchHistory />} />
+        <Route path="/series" element={<Series />} />
+        <Route path="/new" element={<NewPopular />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+
         <Route
           path="/admin"
           element={
